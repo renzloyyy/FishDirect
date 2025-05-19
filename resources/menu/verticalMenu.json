@@ -1,0 +1,123 @@
+{
+  "menu": [
+    {
+      "url": "/",
+      "name": "Home",
+      "icon": "menu-icon tf-icons mdi mdi-home-outline",
+      "slug": "home"
+    },
+    {
+      "name": "Fresh Catches",
+      "icon": "menu-icon tf-icons mdi mdi-fish",
+      "slug": "fresh-catches",
+      "submenu": [
+        {
+          "url": "/fresh-catches/fish",
+          "name": "Fish",
+          "slug": "fish"
+        },
+        {
+          "url": "/fresh-catches/shellfish",
+          "name": "Shellfish",
+          "slug": "shellfish"
+        },
+        {
+          "url": "/fresh-catches/specialty",
+          "name": "Specialty Items",
+          "slug": "specialty"
+        }
+      ]
+    },
+    {
+      "url": "/today-specials",
+      "name": "Today's Specials",
+      "icon": "menu-icon tf-icons mdi mdi-star-outline",
+      "slug": "today-specials",
+      "badge": [
+        "danger",
+        "New"
+      ]
+    },
+    {
+      "url": "/packages",
+      "name": "Seafood Packages",
+      "icon": "menu-icon tf-icons mdi mdi-package-variant-closed",
+      "slug": "packages"
+    },
+    {
+      "url": "/recipes",
+      "name": "Recipes",
+      "icon": "menu-icon tf-icons mdi mdi-food-variant",
+      "slug": "recipes"
+    },
+    {
+      "menuHeader": "My Account"
+    },
+    {
+      "url": "/cart",
+      "name": "My Cart",
+      "icon": "menu-icon tf-icons mdi mdi-cart-outline",
+      "slug": "cart"
+    },
+    {
+      "name": "My Orders",
+      "icon": "menu-icon tf-icons mdi mdi-clipboard-list-outline",
+      "slug": "orders",
+      "submenu": [
+        {
+          "url": "/orders/active",
+          "name": "Active Orders",
+          "slug": "orders-active"
+        },
+        {
+          "url": "/orders/history",
+          "name": "Order History",
+          "slug": "orders-history"
+        }
+      ]
+    },
+    {
+      "name": "Account Settings",
+      "icon": "menu-icon tf-icons mdi mdi-account-outline",
+      "slug": "account-settings",
+      "submenu": [
+        {
+          "url": "/account/profile",
+          "name": "Profile",
+          "slug": "account-profile"
+        },
+        {
+          "url": "/account/addresses",
+          "name": "Delivery Addresses",
+          "slug": "account-addresses"
+        },
+        {
+          "url": "/account/payment",
+          "name": "Payment Methods",
+          "slug": "account-payment"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Support"
+    },
+    {
+      "url": "/delivery-faq",
+      "icon": "menu-icon tf-icons mdi mdi-frequently-asked-questions",
+      "name": "Delivery FAQ",
+      "slug": "delivery-faq"
+    },
+    {
+      "url": "/contact",
+      "icon": "menu-icon tf-icons mdi mdi-message-text-outline",
+      "name": "Contact Us",
+      "slug": "contact"
+    },
+    {
+      "url": "/about",
+      "icon": "menu-icon tf-icons mdi mdi-information-outline",
+      "name": "About Us",
+      "slug": "about"
+    }
+  ]
+}

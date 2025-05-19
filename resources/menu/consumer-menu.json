@@ -1,0 +1,84 @@
+{
+    "menu": [
+        {
+            "url": "/consumer/dashboard",
+            "name": "Home",
+            "icon": "menu-icon tf-icons mdi mdi-home-outline",
+            "slug": "consumer-dashboard"
+        },
+        {
+            "name": "Fresh Catches",
+            "icon": "menu-icon tf-icons mdi mdi-fish",
+            "slug": "fresh-catches"
+        },
+        {
+            "url": "/packages",
+            "name": "Seafood Packages",
+            "icon": "menu-icon tf-icons mdi mdi-package-variant-closed",
+            "slug": "packages"
+        },
+        {
+            "menuHeader": "My Account"
+        },
+        {
+            "url": "/cart",
+            "name": "My Cart",
+            "icon": "menu-icon tf-icons mdi mdi-cart-outline",
+            "slug": "cart"
+        },
+        {
+            "name": "My Orders",
+            "icon": "menu-icon tf-icons mdi mdi-clipboard-list-outline",
+            "slug": "orders",
+            "submenu": [
+                {
+                    "url": "/orders/active",
+                    "name": "Active Orders",
+                    "slug": "orders-active"
+                },
+                {
+                    "url": "/orders/history",
+                    "name": "Order History",
+                    "slug": "orders-history"
+                }
+            ]
+        },
+        {
+            "name": "Account Settings",
+            "icon": "menu-icon tf-icons mdi mdi-account-outline",
+            "slug": "account-settings",
+            "submenu": [
+                {
+                    "url": "/account/profile",
+                    "name": "Profile",
+                    "slug": "account-profile"
+                },
+                {
+                    "url": "/account/addresses",
+                    "name": "Delivery Addresses",
+                    "slug": "account-addresses"
+                },
+                {
+                    "url": "/account/payment",
+                    "name": "Payment Methods",
+                    "slug": "account-payment"
+                }
+            ]
+        },
+        {
+            "menuHeader": "Support"
+        },
+        {
+            "url": "/delivery-faq",
+            "icon": "menu-icon tf-icons mdi mdi-frequently-asked-questions",
+            "name": "Delivery FAQ",
+            "slug": "delivery.faq"
+        },
+        {
+            "url": "/about",
+            "icon": "menu-icon tf-icons mdi mdi-information-outline",
+            "name": "About Us",
+            "slug": "about"
+        }
+    ]
+}
