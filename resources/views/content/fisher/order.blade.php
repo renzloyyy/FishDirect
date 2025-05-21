@@ -579,25 +579,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
-  // Handle modal show event
+  
   modal.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;
 
-    // Set current order ID without prefix "#ORD-"
+    
     currentOrderId = button.getAttribute('data-id').replace('#ORD-', '');
     currentStatus = button.getAttribute('data-status');
 
-    // Populate modal fields
+    
     modalOrderId.textContent = button.getAttribute('data-id');
     modalCustomerName.textContent = button.getAttribute('data-customer');
     modalTotalAmount.textContent = button.getAttribute('data-amount');
 
-    // Status badge with modern styling
+    
     const status = statusConfig[currentStatus] || statusConfig['pending'];
     modalStatus.innerHTML = `<i class="bx ${status.icon} me-1"></i>${status.text}`;
     modalStatus.className = `badge ${status.class} d-inline-flex align-items-center`;
 
-    // Populate items list with proper quantity handling
+    
     const itemsData = button.getAttribute('data-items');
     if (itemsData) {
       try {
@@ -641,14 +641,14 @@ document.addEventListener('DOMContentLoaded', function () {
       modalTotalItems.textContent = '0';
     }
 
-    // Setup status update dropdown
+    
     setupStatusDropdown(currentStatus);
   });
 
   function setupStatusDropdown(currentStatus) {
     statusSelect.innerHTML = '<option value="">Select new status...</option>';
     
-    // Hide/show status update section based on current status
+    
     if (currentStatus === 'delivered' || currentStatus === 'cancelled') {
       statusUpdateSection.style.display = 'none';
       return;
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function () {
       statusUpdateSection.style.display = 'block';
     }
 
-    // Add appropriate status options based on current status
+    
     const statusOptions = {
       'pending': [
         { value: 'confirmed', text: 'Confirmed', icon: 'bx-check-circle' },
@@ -683,12 +683,12 @@ document.addEventListener('DOMContentLoaded', function () {
     statusSelect.disabled = false;
   }
 
-  // Handle status select change
+  
   statusSelect.addEventListener('change', function() {
     updateStatusBtn.disabled = !this.value;
   });
 
-  // Handle status update button click
+  
   updateStatusBtn.addEventListener('click', function() {
     const newStatus = statusSelect.value;
     if (!newStatus || !currentOrderId) return;
@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateOrderStatus(currentOrderId, newStatus);
   });
 
-  // Handle dropdown status updates from table
+  
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('status-update-item')) {
       e.preventDefault();
@@ -728,33 +728,33 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(res => res.json())
     .then(data => {
       if(data.success) {
-        // Update current status
+        
         currentStatus = newStatus;
         
-        // Update modal status badge
+        
         const status = statusConfig[newStatus];
         modalStatus.innerHTML = `<i class="bx ${status.icon} me-1"></i>${status.text}`;
         modalStatus.className = `badge ${status.class} d-inline-flex align-items-center`;
 
-        // Update status in the table row
+        
         const statusBadge = document.getElementById(`status-badge-${orderId}`);
         if (statusBadge) {
           statusBadge.innerHTML = `<i class="bx ${status.icon} me-1"></i>${status.text}`;
           statusBadge.className = `badge ${status.class} d-inline-flex align-items-center`;
         }
 
-        // Update the view button's data-status attribute
+        
         const triggerBtn = document.querySelector(`.btn-view-order[data-id="#ORD-${orderId}"]`);
         if (triggerBtn) {
           triggerBtn.setAttribute('data-status', newStatus);
         }
 
-        // Reset status dropdown
+        
         setupStatusDropdown(newStatus);
         statusSelect.value = '';
         updateStatusBtn.disabled = true;
 
-        // Show success message
+        
         showToast('Success!', `Order has been marked as ${status.text}.`, 'success');
       } else {
         showToast('Error', data.message || 'Failed to update status. Please try again.', 'error');
@@ -772,11 +772,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function showToast(title, message, type) {
-    // Remove existing toasts
+    
     const existingToasts = document.querySelectorAll('.toast-notification');
     existingToasts.forEach(toast => toast.remove());
 
-    // Create new toast
+    
     const toast = document.createElement('div');
     toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed toast-notification`;
     toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     document.body.appendChild(toast);
     
-    // Auto-remove after 5 seconds
+    
     setTimeout(() => {
       if (toast.parentNode) {
         toast.remove();

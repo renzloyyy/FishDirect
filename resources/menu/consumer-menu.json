@@ -7,15 +7,10 @@
             "slug": "consumer-dashboard"
         },
         {
+            "url": "/fresh-catches",
             "name": "Fresh Catches",
             "icon": "menu-icon tf-icons mdi mdi-fish",
             "slug": "fresh-catches"
-        },
-        {
-            "url": "/packages",
-            "name": "Seafood Packages",
-            "icon": "menu-icon tf-icons mdi mdi-package-variant-closed",
-            "slug": "packages"
         },
         {
             "menuHeader": "My Account"
@@ -27,43 +22,16 @@
             "slug": "cart"
         },
         {
+            "url": "/consumer/orders",
             "name": "My Orders",
             "icon": "menu-icon tf-icons mdi mdi-clipboard-list-outline",
-            "slug": "orders",
-            "submenu": [
-                {
-                    "url": "/orders/active",
-                    "name": "Active Orders",
-                    "slug": "orders-active"
-                },
-                {
-                    "url": "/orders/history",
-                    "name": "Order History",
-                    "slug": "orders-history"
-                }
-            ]
+            "slug": "consumer.orders"
         },
         {
-            "name": "Account Settings",
+            "url": "/profile",
+            "name": "Profile",
             "icon": "menu-icon tf-icons mdi mdi-account-outline",
-            "slug": "account-settings",
-            "submenu": [
-                {
-                    "url": "/account/profile",
-                    "name": "Profile",
-                    "slug": "account-profile"
-                },
-                {
-                    "url": "/account/addresses",
-                    "name": "Delivery Addresses",
-                    "slug": "account-addresses"
-                },
-                {
-                    "url": "/account/payment",
-                    "name": "Payment Methods",
-                    "slug": "account-payment"
-                }
-            ]
+            "slug": "profile.edit"
         },
         {
             "menuHeader": "Support"

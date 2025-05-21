@@ -51,24 +51,24 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            // Retrieve or create order item (cart item)
+            
             $item = OrderItem::firstOrNew([
                 'consumer_id' => $consumer->id,
                 'fish_product_id' => $product->id,
                 'order_id' => null,
             ]);
 
-            // Increase quantity in cart
+            
             $item->quantity_kg = ($item->quantity_kg ?? 0) + $request->quantity;
             $item->price_per_kg = $product->price_per_kg;
             $item->subtotal = $item->quantity_kg * $item->price_per_kg;
             $item->image_path = $product->image_path;
             $item->save();
 
-            // Deduct the quantity from the original product stock
+            
             $product->stock_kg -= $request->quantity;
 
-            // Optionally update status if stock hits zero or below
+            
             if ($product->stock_kg <= 0) {
                 $product->stock_kg = 0;
                 $product->status = 'SoldOut';

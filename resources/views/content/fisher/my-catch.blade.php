@@ -177,6 +177,22 @@
   }
 </style>
 @endsection
+
+@section('vendor-script')
+<!-- Vendor JS -->
+<script src="
+
+<script>
+
+    var successMessage = "{{ session('success') }}";
+    var errorMessage = "{{ session('error') }}";
+</script>
+
+<!-- Include your custom script file -->
+<script src="{{ asset('assets/js/custom-scripts.js') }}"></script>
+
+@endsection
+
 @section('content')
 <div class="container-xxl py-4">
   <div class="row justify-content-center">
@@ -334,32 +350,41 @@
               </thead>
               <tbody>
                 @foreach($activeListings as $product)
-                <tr>
-                  <td style="width: 100px;">
-                    <img src="{{ asset($product->image_path ?? 'images/default-fish.jpg') }}" alt="{{ $product->name }}" class="rounded" style="height: 60px; object-fit: cover; width: 100px;">
-                  </td>
-                  <td class="text-ocean-medium fw-semibold">{{ $product->name }}</td>
-                  <td class="text-muted" style="max-width: 300px;">
-                    {{ Str::limit($product->description, 80) ?? 'No description provided.' }}
-                  </td>
-                  <td>₱{{ number_format($product->price_per_kg, 2) }}</td>
-                  <td>{{ $product->stock_kg ?? 0 }}</td>
-                  <td class="text-muted">{{ $product->catch_date ? \Carbon\Carbon::parse($product->catch_date)->format('M d, Y') : 'N/A' }}</td>
-                  <td class="text-center">
-                    <div class="d-flex justify-content-center gap-2">
-                      <a href="" class="btn btn-outline-ocean btn-sm">
-                        <i class="bx bx-edit-alt me-1"></i> Edit
-                      </a>
-                      <form action="" method="POST" onsubmit="return confirm('Delete this catch?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-coral btn-sm">
-                          <i class="bx bx-trash me-1"></i> Delete
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
+              <tr>
+                <td style="width: 100px;">
+                  <img src="{{ asset($product->image_path ?? 'images/default-fish.jpg') }}" alt="{{ $product->name }}" class="rounded" style="height: 60px; object-fit: cover; width: 100px;">
+                </td>
+                <td class="text-ocean-medium fw-semibold">{{ $product->name }}</td>
+                <td class="text-muted" style="max-width: 300px;">
+                  {{ Str::limit($product->description, 80) ?? 'No description provided.' }}
+                </td>
+                <td>₱{{ number_format($product->price_per_kg, 2) }}</td>
+                <td>{{ $product->stock_kg ?? 0 }}</td>
+                <td class="text-muted">{{ $product->catch_date ? \Carbon\Carbon::parse($product->catch_date)->format('M d, Y') : 'N/A' }}</td>                                  
+                <td class="text-center">
+                  <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-ocean btn-sm edit-catch-btn" data-bs-toggle="modal" data-bs-target="#editCatchModal"
+                      data-id="{{ $product->id }}"
+                      data-name="{{ $product->name }}"
+                      data-price="{{ $product->price_per_kg }}"
+                      data-stock="{{ $product->stock_kg }}"
+                      data-fish-type="{{ $product->fish_type }}"
+                      data-catch-date="{{ $product->catch_date }}"
+                      data-description="{{ $product->description }}"
+                      data-status="{{ $product->status }}"
+                      data-image-path="{{ asset($product->image_path ?? 'images/default-fish.jpg') }}">
+                      <i class="bx bx-edit-alt me-1"></i> Edit
+                    </button>
+                    <form id="deleteForm_{{ $product->id }}" action="{{ route('my-catch.destroy', $product->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" class="btn btn-coral btn-sm" onclick="confirmDelete('deleteForm_{{ $product->id }}')">
+                      <i class="bx bx-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                  </div>
+                </td>
+              </tr>
                 @endforeach
               </tbody>
             </table>
@@ -375,4 +400,206 @@
     </div>
   </div>
 </div>
+<!-- Updated Edit Modal with correct form fields -->
+<div class="modal fade" id="editCatchModal" tabindex="-1" aria-labelledby="editCatchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-ocean-light border-ocean-light">
+        <h5 class="modal-title text-ocean-deep" id="editCatchModalLabel">Edit Catch</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="" id="editCatchForm" enctype="multipart/form-data">
+          @csrf
+          @method('PUT')
+          <input type="hidden" id="edit_id" name="id">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-floating form-floating-outline">
+                <input type="text" class="form-control border-ocean-light" id="edit_name" name="name" required>
+                <label for="edit_name">Name of Catch</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-floating form-floating-outline">
+                <input type="number" class="form-control border-ocean-light" id="edit_price_per_kg" name="price_per_kg" step="0.01" min="0" required>
+                <label for="edit_price_per_kg">Price Per Kg (₱)</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-floating form-floating-outline">
+                <input type="number" class="form-control border-ocean-light" id="edit_stock_kg" name="stock_kg" step="0.1" min="0" required>
+                <label for="edit_stock_kg">Available Stock (kg)</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-floating form-floating-outline">
+                <select class="form-control border-ocean-light" id="edit_status" name="status" required>
+                  <option value="Active">Active</option>
+                  <option value="SoldOut">Sold Out</option>
+                </select>
+                <label for="edit_status">Status</label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-floating form-floating-outline">
+                <input type="date" class="form-control border-ocean-light" id="edit_catch_date" name="catch_date" required>
+                <label for="edit_catch_date">Catch Date</label>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <div class="form-floating form-floating-outline">
+                <textarea class="form-control border-ocean-light" id="edit_description" name="description" style="height: 100px" required></textarea>
+                <label for="edit_description">Description</label>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label for="edit_image_path" class="form-label text-ocean-deep">Fish Image (optional)</label>
+              <input type="file" class="form-control border-ocean-light" id="edit_image_path" name="image_path">
+              <small class="text-muted">Upload a new image only if you want to replace the existing one.</small>
+            </div>
+
+            <div class="col-md-12 mb-3 d-none" id="editImagePreviewContainer">
+              <label class="form-label text-ocean-deep">Current Image Preview</label>
+              <div class="border rounded p-2 text-center">
+                <img id="editImagePreview" src="#" alt="Fish Image Preview" style="max-height: 200px; max-width: 100%;">
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-ocean me-sm-3 me-1">
+              <i class="bx bx-save me-1"></i> Update Catch
+            </button>
+            <button type="button" class="btn btn-outline-ocean" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+ 
+document.addEventListener('DOMContentLoaded', function() {
+  
+  initializeSweetAlert();
+  
+  
+  initializeEditModal();
+});
+
+
+function initializeSweetAlert() {
+  
+  if (typeof successMessage !== 'undefined' && successMessage) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: successMessage,
+      timer: 3000,
+      showConfirmButton: false
+    });
+  }
+  
+  
+  if (typeof errorMessage !== 'undefined' && errorMessage) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error!',
+      text: errorMessage,
+      timer: 3000,
+      showConfirmButton: true
+    });
+  }
+}
+
+
+function initializeEditModal() {
+  const editCatchModal = document.getElementById('editCatchModal');
+  if (editCatchModal) {
+    editCatchModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      if (!button) return;
+
+      
+      const id = button.getAttribute('data-id');
+      const name = button.getAttribute('data-name');
+      const price = button.getAttribute('data-price');
+      const stock = button.getAttribute('data-stock');
+      const status = button.getAttribute('data-status') || 'Active';
+      const catchDate = button.getAttribute('data-catch-date');
+      const description = button.getAttribute('data-description');
+      const imagePath = button.getAttribute('data-image-path');
+
+      
+      const form = document.getElementById('editCatchForm');
+      form.action = `/fisherman/my-catch/${id}`;
+
+      
+      document.getElementById('edit_id').value = id;
+      document.getElementById('edit_name').value = name;
+      document.getElementById('edit_price_per_kg').value = price;
+      document.getElementById('edit_stock_kg').value = stock;
+      document.getElementById('edit_status').value = status;
+      document.getElementById('edit_catch_date').value = catchDate;
+      document.getElementById('edit_description').value = description || '';
+
+      
+      if (imagePath) {
+        const preview = document.getElementById('editImagePreview');
+        preview.src = imagePath;
+        document.getElementById('editImagePreviewContainer').classList.remove('d-none');
+      } else {
+        document.getElementById('editImagePreviewContainer').classList.add('d-none');
+      }
+    });
+  }
+}
+
+
+function confirmDelete(formId) {
+  event.preventDefault(); 
+
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "This action cannot be undone.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#e3342f', 
+    cancelButtonColor: '#6c757d',  
+    confirmButtonText: 'Yes, delete it!',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+    focusCancel: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      Swal.fire({
+        title: 'Deleting...',
+        text: 'Please wait while we remove the item.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      
+      setTimeout(() => {
+        document.getElementById(formId).submit();
+      }, 800);
+    }
+  });
+}
+
+</script>
+
 @endsection

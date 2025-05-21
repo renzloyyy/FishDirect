@@ -12,16 +12,16 @@
 @section('page-style')
 <style>
   :root {
-    /* Ocean blues palette */
+    
     --ocean-deep: #005f73;
     --ocean-medium: #0a9396;
     --ocean-light: #94d2bd;
     
-    /* Natural neutrals */
+    
     --sand-light: #e9d8a6;
     --sand-medium: #ee9b00;
     
-    /* Coral accents */
+    
     --coral-light: #ee9b00;
     --coral-medium: #ca6702;
     --coral-deep: #bb3e03;
@@ -147,7 +147,11 @@
     background-color: rgba(238, 155, 0, 0.15) !important;
     color: var(--coral-medium) !important;
   }
-  
+  .greyed-menu {
+  background-color: #e0e0e0 !important; 
+  transition: background-color 0.3s ease;
+}
+
   .welcome-banner {
     background: linear-gradient(135deg, var(--ocean-medium) 0%, var(--ocean-deep) 100%);
     color: white;
@@ -197,6 +201,7 @@
 @section('vendor-script')
 <!-- Vendor JS -->
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apexcharts.js') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection
 
 @section('content')
@@ -377,7 +382,9 @@
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="card-title mb-0 text-ocean-deep">Featured Fishermen</h5>
-      <a href="" class="btn btn-sm btn-outline-ocean">View All</a>
+     <a href="#" class="btn btn-sm btn-outline-ocean" data-bs-toggle="modal" data-bs-target="#featuredFishermenModal">
+      View All
+    </a>
     </div>
     <div class="card-body">
       <ul class="list-group list-group-flush">
@@ -432,7 +439,7 @@
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="card-title mb-0 text-ocean-deep">Recent Orders</h5>
-      <a href="" class="btn btn-sm btn-outline-ocean">View All</a>
+      <a href="{{route('consumer.orders')}}" class="btn btn-sm btn-outline-ocean">View All</a>
     </div>
     <div class="table-responsive">
       <table class="table table-hover">
@@ -464,7 +471,66 @@
     </div>
   </div>
 </div>
-  
+  <!-- Featured Fishermen Modal -->
+<div class="modal fade" id="featuredFishermenModal" tabindex="-1" aria-labelledby="featuredFishermenModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg"> <!-- scrollable if long list -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-ocean-deep" id="featuredFishermenModalLabel">All Featured Fishermen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group list-group-flush">
+          @forelse($featuredFishermen as $fisher)
+            <li class="list-group-item d-flex align-items-center {{ $loop->first ? 'border-top-0' : '' }} px-0">
+              <div class="avatar me-3">
+                @if($fisher->profile_photo)
+                  <img src="{{ asset('storage/' . $fisher->profile_photo) }}" alt="{{ $fisher->display_name }}" class="rounded-circle" width="40" height="40">
+                @else
+                  <span class="avatar-initial rounded-circle bg-ocean-{{ ['medium', 'light', 'deep'][array_rand(['medium', 'light', 'deep'])] }} text-white">
+                    {{ substr($fisher->display_name ?? $fisher->full_name, 0, 1) }}{{ substr(explode(' ', $fisher->display_name ?? $fisher->full_name)[1] ?? '', 0, 1) }}
+                  </span>
+                @endif
+              </div>
+              <div class="d-flex flex-column flex-grow-1">
+                <span class="fw-semibold text-ocean-deep">{{ $fisher->display_name ?? $fisher->full_name }}</span>
+                <small class="text-muted">
+                  @if($fisher->fisher_type)
+                    Specializes in {{ strtolower($fisher->fisher_type) }} fishing
+                  @elseif($fisher->sustainable_method)
+                    Sustainable fishing practices
+                  @elseif($fisher->fishing_area)
+                    Fishes in {{ $fisher->fishing_area }}
+                  @else
+                    {{ \Illuminate\Support\Str::limit($fisher->bio, 30) ?? 'Professional fisherman' }}
+                  @endif
+                </small>
+              </div>
+              @if(Auth::check() && Auth::user()->role === 'consumer')
+                <form action="{{ route('fishermen.follow', $fisher->id) }}" method="POST">
+                  @csrf
+                  <button type="submit" class="btn btn-sm {{ $fisher->isFollowedByConsumer(Auth::user()->consumer->id) ? 'btn-ocean' : 'btn-outline-ocean' }}">
+                    {{ $fisher->isFollowedByConsumer(Auth::user()->consumer->id) ? 'Following' : 'Follow' }}
+                  </button>
+                </form>
+              @else
+                <a href="{{ route('auth-login-basic') }}" class="btn btn-sm btn-outline-ocean">Follow</a>
+              @endif
+            </li>
+          @empty
+            <li class="list-group-item text-center">
+              <p class="text-muted my-2">No featured fishermen available at this time.</p>
+            </li>
+          @endforelse
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
   <!-- Recommended for You and Sustainable Fishing Tips -->
   <div class="row mt-4">
     <!-- Recommended For You -->
@@ -714,199 +780,154 @@
 
 @section('page-script')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const decreaseButtons = document.querySelectorAll('.qty-decrease');
-  const increaseButtons = document.querySelectorAll('.qty-increase');
-  const quantityInputs = document.querySelectorAll('.quantity-input');
-  const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-  const buyNowButtons = document.querySelectorAll('.buy-now-btn');
-
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-  decreaseButtons.forEach(button => {
-    button.addEventListener('click', function () {
-      const productId = this.dataset.productId;
-      const quantityInput = document.getElementById(`quantity-${productId}`);
-      let quantity = parseFloat(quantityInput.value);
-      const min = parseFloat(quantityInput.min) || 0.5;
-
-      if (quantity > min) {
-        quantity -= 0.5;
-        quantityInput.value = quantity.toFixed(1);
-        updateTotalPrice(productId);
-      }
-    });
-  });
-
-  increaseButtons.forEach(button => {
-    button.addEventListener('click', function () {
-      const productId = this.dataset.productId;
-      const quantityInput = document.getElementById(`quantity-${productId}`);
-      let quantity = parseFloat(quantityInput.value);
-      const max = parseFloat(quantityInput.max);
-
-      if (quantity < max) {
-        quantity += 0.5;
-        quantityInput.value = quantity.toFixed(1);
-        updateTotalPrice(productId);
-      }
-    });
-  });
-
-  quantityInputs.forEach(input => {
-    const productId = input.dataset.productId;
-
-    input.addEventListener('input', () => updateTotalPrice(productId));
-    input.addEventListener('change', () => {
-      let quantity = parseFloat(input.value);
-      const min = parseFloat(input.min) || 0.5;
-      const max = parseFloat(input.max);
-
-      if (isNaN(quantity) || quantity < min) {
-        quantity = min;
-      } else if (quantity > max) {
-        quantity = max;
-      }
-
-      input.value = quantity.toFixed(1);
-      updateTotalPrice(productId);
-    });
-
-    updateTotalPrice(productId);
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
   function updateTotalPrice(productId) {
     const quantityInput = document.getElementById(`quantity-${productId}`);
-    const totalInput = document.getElementById(`total-${productId}`);
+    const totalPriceInput = document.getElementById(`total-${productId}`);
     const priceInput = document.querySelector(`.price[data-product-id="${productId}"]`);
-    const quantity = parseFloat(quantityInput.value);
 
-    let pricePerKg = 0;
+    if (!quantityInput || !totalPriceInput || !priceInput) return;
 
-    if (priceInput) {
-      pricePerKg = parseFloat(priceInput.value);
-    } else {
-      const priceElement = document.querySelector(`#productModal-${productId} .text-coral-deep`);
-      if (priceElement) {
-        if (priceElement.hasAttribute('data-price')) {
-          pricePerKg = parseFloat(priceElement.getAttribute('data-price'));
-        } else {
-          const match = priceElement.textContent.match(/₱([\d,]+\.\d+)/);
-          if (match) {
-            pricePerKg = parseFloat(match[1].replace(/,/g, ''));
-          } else {
-            console.error(`Could not extract price for product ${productId}`);
-            return;
-          }
-        }
-      } else {
-        console.error(`Price element not found for product ${productId}`);
-        return;
-      }
-    }
-
-    const totalPrice = quantity * pricePerKg;
-    const formatted = totalPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-    if (totalInput) {
-      if (totalInput.tagName === 'INPUT') {
-        totalInput.value = formatted;
-      } else {
-        totalInput.textContent = formatted;
-      }
-    }
-
-    document.querySelectorAll(`.total-display-${productId}`)
-      .forEach(el => el.textContent = formatted);
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    totalPriceInput.value = (quantity * price).toFixed(2);
   }
 
-  addToCartButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault(); 
-      
-      const productId = this.dataset.productId;
-      const quantity = parseFloat(document.getElementById(`quantity-${productId}`).value);
-      
-  
-      const formData = new FormData();
-      formData.append('product_id', productId);
-      formData.append('quantity', quantity);
-      formData.append('_token', csrfToken);
-      
-      fetch('/cart/add', {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-        },
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          alert('Added to cart successfully!');
-          const cartCountElement = document.querySelector('.cart-count');
-          if (cartCountElement && data.cartCount !== undefined) {
-            cartCountElement.textContent = data.cartCount;
-          }
-          const modal = document.getElementById(`productModal-${productId}`);
-          const bootstrapModal = bootstrap.Modal.getInstance(modal);
-          if (bootstrapModal) {
-            bootstrapModal.hide();
-          }
-        } else {
-          alert(data.message || 'Failed to add item to cart.');
-        }
-      })
-      .catch(err => {
-        console.error('Add to cart error:', err);
-        alert('An error occurred while adding to cart. Please try again.');
-      });
+  document.querySelectorAll('.qty-increase').forEach(button => {
+    button.addEventListener('click', () => {
+      const productId = button.dataset.productId;
+      const input = document.getElementById(`quantity-${productId}`);
+      const max = parseFloat(input.max) || Infinity;
+      const step = parseFloat(input.step) || 1;
+      let current = parseFloat(input.value) || 0;
+
+      if (current + step <= max) {
+        input.value = (current + step).toFixed(1);
+        updateTotalPrice(productId);
+      }
     });
   });
 
-  buyNowButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      e.preventDefault(); 
-      
-      const productId = this.dataset.productId;
+  document.querySelectorAll('.qty-decrease').forEach(button => {
+    button.addEventListener('click', () => {
+      const productId = button.dataset.productId;
+      const input = document.getElementById(`quantity-${productId}`);
+      const min = parseFloat(input.min) || 0;
+      const step = parseFloat(input.step) || 1;
+      let current = parseFloat(input.value) || 0;
+
+      if (current - step >= min) {
+        input.value = (current - step).toFixed(1);
+        updateTotalPrice(productId);
+      }
+    });
+  });
+
+  document.querySelectorAll('.quantity-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const productId = input.dataset.productId;
+      const val = parseFloat(input.value);
+      const min = parseFloat(input.min) || 0;
+      const max = parseFloat(input.max) || Infinity;
+
+      input.value = Math.min(Math.max(val, min), max).toFixed(1);
+      updateTotalPrice(productId);
+    });
+  });
+
+  function handleResponse(response, productId, successMessage, redirect = null) {
+    const modal = document.getElementById(`productModal-${productId}`);
+    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+    if (bootstrapModal) bootstrapModal.hide();
+
+    if (response.success) {
+      Swal.fire({
+        icon: 'success',
+        title: successMessage,
+        timer: 2000,
+        showConfirmButton: false,
+        timerProgressBar: true,
+      }).then(() => {
+        if (redirect) window.location.href = response.redirect_url;
+      });
+
+      const cartCountElement = document.querySelector('.cart-count');
+      if (cartCountElement && response.cartCount !== undefined) {
+        cartCountElement.textContent = response.cartCount;
+      }
+
+      const quantityInput = document.getElementById(`quantity-${productId}`);
+      quantityInput.value = 1;
+      updateTotalPrice(productId);
+
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Action Failed',
+        text: response.message || 'Something went wrong.',
+      });
+    }
+  }
+
+  function handleError(error, productId, title) {
+    const modal = document.getElementById(`productModal-${productId}`);
+    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+    if (bootstrapModal) bootstrapModal.hide();
+
+    console.error(`${title} error:`, error);
+    Swal.fire({
+      icon: 'error',
+      title,
+      text: 'An error occurred. Please try again.',
+    });
+  }
+
+  document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const productId = button.dataset.productId;
       const quantity = parseFloat(document.getElementById(`quantity-${productId}`).value);
-      
+
       const formData = new FormData();
       formData.append('product_id', productId);
       formData.append('quantity', quantity);
       formData.append('_token', csrfToken);
-      
-      fetch('/cart/buy-now', {
+
+      fetch('/cart/add', {
         method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': csrfToken,
-        },
+        headers: { 'X-CSRF-TOKEN': csrfToken },
         body: formData
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
+      .then(res => res.json())
+      .then(data => handleResponse(data, productId, 'Added to Cart!'))
+      .catch(err => handleError(err, productId, 'Add to Cart Failed'));
+    });
+  });
+
+  document.querySelectorAll('.buy-now-btn').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const productId = button.dataset.productId;
+      const quantity = parseFloat(document.getElementById(`quantity-${productId}`).value);
+
+      const formData = new FormData();
+      formData.append('product_id', productId);
+      formData.append('quantity', quantity);
+      formData.append('_token', csrfToken);
+
+      fetch('/checkout/buynow', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrfToken },
+        body: formData
       })
-      .then(data => {
-        if (data.success) {
-          window.location.href = '/checkout';
-        } else {
-          alert(data.message || 'Failed to process purchase.');
-        }
-      })
-      .catch(err => {
-        console.error('Buy now error:', err);
-        alert('An error occurred while processing your purchase. Please try again.');
-      });
+      .then(res => res.json())
+      .then(data => handleResponse(data, productId, 'Purchase Successful!', true))
+      .catch(err => handleError(err, productId, 'Buy Now Failed'));
     });
   });
 });
 </script>
+
 @endsection

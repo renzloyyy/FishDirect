@@ -15,54 +15,68 @@ class CartController extends Controller
 {
     public function viewCartPage()
     {
-    $user = Auth::user();
+        $user = Auth::user();
 
-    if (!$user) {
-        return redirect()->route('login')->with('error', 'You must be logged in to view the cart.');
-    }
-
-    $consumer = Consumer::where('user_id', $user->id)->first();
-
-    if (!$consumer) {
-        return redirect()->back()->with('error', 'Consumer profile not found.');
-    }
-
-    $cartItems = OrderItem::with('fishProduct')
-        ->where('consumer_id', $consumer->id)
-        ->whereNull('order_id')
-        ->get();
-
-    $cartProductIds = $cartItems->pluck('fish_product_id')->toArray();
-
-    $recommendedProducts = FishProduct::where('status', 'active')
-        ->whereNotIn('id', $cartProductIds)
-        ->inRandomOrder()
-        ->take(4)
-        ->get();
-
-    $availableVouchers = Voucher::where('is_active', true)
-        ->where(function ($query) {
-            $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
-        })
-        ->get();
-
-    $subtotal = $cartItems->sum(fn($i) => $i->quantity_kg * $i->price_per_kg);
-
-    $promoType = session('promo_type', null);
-    $promoValue = session('promo_value', null);
-    $discount = 0;
-
-    if ($promoType && $promoValue) {
-        if ($promoType === 'percentage') {
-            $discount = ($promoValue / 100) * $subtotal;
-        } elseif ($promoType === 'fixed') {
-            $discount = $promoValue;
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'You must be logged in to view the cart.');
         }
-    }
 
-    $discount = min($discount, $subtotal);
+        $consumer = Consumer::where('user_id', $user->id)->first();
 
-    return view('content.consumer.add-to-cart', compact('cartItems', 'recommendedProducts', 'availableVouchers', 'subtotal', 'discount'));
+        if (!$consumer) {
+            return redirect()->back()->with('error', 'Consumer profile not found.');
+        }
+
+        $cartItems = OrderItem::with('fishProduct')
+            ->where('consumer_id', $consumer->id)
+            ->whereNull('order_id')
+            ->get();
+
+        $cartProductIds = $cartItems->pluck('fish_product_id')->toArray();
+
+        $recommendedProducts = FishProduct::where('status', 'active')
+            ->whereNotIn('id', $cartProductIds)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+
+        $availableVouchers = Voucher::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        $subtotal = $cartItems->sum(fn($i) => $i->quantity_kg * $i->price_per_kg);
+
+        $promoType = session('promo_type', null);
+        $promoValue = session('promo_value', null);
+        $discount = 0;
+
+        if ($promoType && $promoValue) {
+            if ($promoType === 'percentage') {
+                $discount = ($promoValue / 100) * $subtotal;
+            } elseif ($promoType === 'fixed') {
+                $discount = $promoValue;
+            }
+        }
+
+        $discount = min($discount, $subtotal);
+        $subtotalAfterDiscount = max(0, $subtotal - $discount);
+
+        $shipping = 80;
+        $tax = round($subtotalAfterDiscount * 0.10);
+        $total = $subtotalAfterDiscount + $shipping + $tax;
+
+        return view('content.consumer.add-to-cart', compact(
+            'cartItems',
+            'recommendedProducts',
+            'availableVouchers',
+            'subtotal',
+            'discount',
+            'shipping',
+            'tax',
+            'total'
+        ));
     }
 
     public function checkout(Request $request)
@@ -87,13 +101,10 @@ class CartController extends Controller
             return back()->with('error', 'Your cart is empty.');
         }
 
-        // Compute subtotal for cart items
         $subtotal = $cartItems->sum(fn($item) => $item->quantity_kg * $item->price_per_kg);
 
-        // Retrieve promo info from session
         $promoType = session('promo_type', null);
         $promoValue = session('promo_value', null);
-
         $discountAmount = 0;
 
         if ($promoType && $promoValue) {
@@ -104,10 +115,11 @@ class CartController extends Controller
             }
         }
 
+        $discountAmount = min($discountAmount, $subtotal);
         $subtotalAfterDiscount = max(0, $subtotal - $discountAmount);
 
-        $shipping = 100; // fixed shipping fee
-        $tax = round($subtotalAfterDiscount * 0.12, 2); // 12% tax
+        $shipping = 80;
+        $tax = round($subtotalAfterDiscount * 0.10);
         $total = $subtotalAfterDiscount + $shipping + $tax;
 
         DB::beginTransaction();
@@ -131,7 +143,7 @@ class CartController extends Controller
                     $request->input('province') . ' ' .
                     $request->input('zip_code'),
                 'delivery_instructions' => $request->input('delivery_instructions'),
-                'promo_code' => session('promo_code'), // store promo code if applied
+                'promo_code' => session('promo_code'),
             ]);
 
             foreach ($cartItems as $item) {
@@ -145,7 +157,6 @@ class CartController extends Controller
 
             DB::commit();
 
-            // Clear promo session after order success
             session()->forget(['promo_code', 'promo_type', 'promo_value']);
 
             return redirect()->route('orders.success')->with('success', 'Order placed successfully!');
@@ -154,6 +165,7 @@ class CartController extends Controller
             return back()->with('error', 'Failed to place order: ' . $e->getMessage());
         }
     }
+
     public function apply(Request $request)
     {
         $code = $request->input('promo_code');

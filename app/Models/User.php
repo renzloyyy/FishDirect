@@ -14,11 +14,14 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'sso_provider',  // Added for SSO
+        'sso_id',        // Added for SSO
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'sso_id',       
     ];
 
     public function consumer()

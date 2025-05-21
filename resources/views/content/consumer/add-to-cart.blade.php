@@ -321,14 +321,6 @@
 <div class="container my-1">
   <div class="row">
     <div class="col-12 mb-3">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item">
-            <a href="{{ route('consumer-dashboard') }}" class="text-ocean-medium">Home</a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">My Cart</li>
-        </ol>
-      </nav>
     </div>
     <div class="col-12 mb-4">
       <h4 class="text-ocean-deep">
@@ -399,42 +391,6 @@
           @endforelse
         </div>
       </div>
-
-     <!-- Recommended Products Section -->
-    <div class="card mt-4">
-      <div class="card-header">
-        <h5 class="card-title mb-0 text-ocean-deep">You Might Also Like</h5>
-      </div>
-      <div class="card-body">
-        <div class="row g-4">
-          @forelse ($recommendedProducts as $product)
-            <div class="col-6 col-md-3 d-flex">
-              <div class="card w-100">
-                <div class="position-relative" style="height:180px; overflow:hidden;">
-                  <span class="badge badge-fresh position-absolute top-0 start-0 m-2">Fresh</span>
-                  <img src="{{ asset($product->image_path) }}"
-                      alt="{{ $product->name }}"
-                      class="img-fluid w-100 h-100 rounded"
-                      style="object-fit:contain;">
-                </div>
-                <div class="card-body d-flex flex-column">
-                  <h6 class="text-ocean-deep mb-1">{{ $product->name }}</h6>
-                  <p class="text-muted small mb-2">{{ $product->description ? Str::limit($product->description, 30) : 'Fresh catch of the day' }}</p>
-                  <div class="d-flex justify-content-between align-items-center mt-auto">
-                    <div class="text-coral-deep fw-bold">₱{{ number_format($product->price_per_kg, 2) }} per kg</div>
-                    <a href="" class="btn btn-sm btn-ocean">View</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          @empty
-            <div class="col-12">
-              <p class="text-muted text-center">No recommended products available at this time.</p>
-            </div>
-          @endforelse
-        </div>
-      </div>
-    </div>
     </div>
   <!-- Right Column: Order Summary -->
 <div class="col-lg-5">
@@ -442,13 +398,13 @@
     <div class="card-body">
       <h5 class="card-title mb-4 text-ocean-deep">Order Summary</h5>
 
-      @php
-        // Use the $subtotal and $discount passed from controller
-        // Calculate shipping and tax as needed
+    @php
         $shipping = $subtotal > 0 ? 80 : 0;
-        $tax = 0;
-        $total = $subtotal - $discount + $shipping + $tax;
-      @endphp
+        $discountedSubtotal = max(0, $subtotal - $discount);
+        $tax = round($discountedSubtotal * 0.10);
+        $total = $discountedSubtotal + $shipping + $tax;
+    @endphp
+
 
       <div class="d-flex justify-content-between mb-2">
         <span>Subtotal</span>
@@ -712,7 +668,7 @@
 @endsection
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // Next tab buttons
+ 
   document.querySelectorAll('.next-tab').forEach(button => {
     button.addEventListener('click', function () {
       const nextTabId = this.getAttribute('data-next');
@@ -725,7 +681,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Previous tab buttons
   document.querySelectorAll('.prev-tab').forEach(button => {
     button.addEventListener('click', function () {
       const prevTabId = this.getAttribute('data-prev');

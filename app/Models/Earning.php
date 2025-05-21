@@ -9,26 +9,34 @@ class Earning extends Model
 {
     use HasFactory;
 
-    protected $table = 'earnings';
-
     protected $fillable = [
         'fisher_id',
         'order_item_id',
         'amount',
         'status',
-        'payout_method',
         'notes',
     ];
 
-    // Relationships
-
     public function fisher()
     {
-        return $this->belongsTo(Fisher::class, 'fisher_id');
+        return $this->belongsTo(Fisher::class);
     }
 
     public function orderItem()
     {
-        return $this->belongsTo(OrderItem::class, 'order_item_id');
+        return $this->belongsTo(OrderItem::class);
+    }
+
+    
+    public function order()
+    {
+        return $this->hasOneThrough(
+            Order::class,   
+            OrderItem::class,
+            'id',             
+            'id',            
+            'order_item_id',  
+            'order_id'        
+        );
     }
 }

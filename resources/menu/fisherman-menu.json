@@ -13,31 +13,25 @@
             "slug": "mycatch"
         },
         {
-            "url": "/order",
+            "url": "/fisher/orders",
             "name": "Orders",
             "icon": "menu-icon tf-icons mdi mdi-cart",
             "slug": "catches.order"
         },
         {
-            "url": "/fisherman/earnings",
+            "url": "/earnings",
             "name": "My Earnings",
             "icon": "menu-icon tf-icons mdi mdi-currency-php",
-            "slug": "earnings"
+            "slug": "earnings.index"
         },
         {
             "menuHeader": "Account"
         },
         {
-            "url": "/fisherman/profile",
+            "url": "/profile",
             "name": "Profile",
             "icon": "menu-icon tf-icons mdi mdi-account-outline",
             "slug": "profile"
-        },
-        {
-            "url": "/fisherman/bank-details",
-            "name": "Bank Details",
-            "icon": "menu-icon tf-icons mdi mdi-bank",
-            "slug": "bank-details"
         },
         {
             "menuHeader": "Support"
@@ -47,12 +41,6 @@
             "name": "Fisher FAQ",
             "icon": "menu-icon tf-icons mdi mdi-frequently-asked-questions",
             "slug": "fisher.faq"
-        },
-        {
-            "url": "/fisherman/support/contact",
-            "name": "Contact Admin",
-            "icon": "menu-icon tf-icons mdi mdi-message-text-outline",
-            "slug": "contact-admin"
         }
     ]
 }

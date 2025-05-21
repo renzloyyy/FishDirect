@@ -22,12 +22,12 @@ class Consumer extends Model
         'preferred_fish_types',
         'dietary_restrictions',
         'preferred_payment_method',
-        'agreed_terms', // ✅ Make sure it's fillable
+        'agreed_terms', 
     ];
 
     protected $casts = [
         'preferred_fish_types' => 'array',
-        // 'agreed_terms' => 'boolean', ❌ Remove this cast now that it's VARCHAR
+        
     ];
 
     public function user()

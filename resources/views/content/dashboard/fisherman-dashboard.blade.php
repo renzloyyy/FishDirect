@@ -17,16 +17,16 @@
 <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/cards-advance.css') }}">
 <style>
   :root {
-    /* Ocean blues palette */
+    
     --ocean-deep: #005f73;
     --ocean-medium: #0a9396;
     --ocean-light: #94d2bd;
     
-    /* Natural neutrals */
+    
     --sand-light: #e9d8a6;
     --sand-medium: #ee9b00;
     
-    /* Coral accents */
+    
     --coral-light: #ee9b00;
     --coral-medium: #ca6702;
     --coral-deep: #bb3e03;
@@ -196,7 +196,7 @@
     background-color: var(--ocean-light) !important;
     color: var(--ocean-deep) !important;
   }
-  /* Add New Catch Card Fix */
+  
   .listings-card.h-100 {
     box-shadow: none;
     transition: transform 0.2s ease;
@@ -216,7 +216,7 @@
     background-color: rgba(148, 210, 189, 0.1);
   }
 
-  /* Earnings Overview Fix */
+  
   #earningsChart {
     height: 100%;
     min-height: 120px;
@@ -235,7 +235,7 @@
     color: #2e8b57 !important;
   }
 
-  /* Top Customers Fix */
+  
 .customer-card {
   box-shadow: none;
   border: 1px solid rgba(0, 95, 115, 0.1);
@@ -266,6 +266,8 @@
 <script src="{{ asset('assets/vendor/libs/swiper/swiper.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 @endsection
 
 @section('content')
@@ -419,46 +421,102 @@
       </div>
     </div>
   </div>
-
-  <!-- Earnings Overview Card -->
-  <div class="col-md-6">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 text-ocean-deep">Earnings Overview</h5>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-outline-ocean dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            This Month
-          </button>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">This Week</a></li>
-            <li><a class="dropdown-item" href="#">This Month</a></li>
-            <li><a class="dropdown-item" href="#">Last 3 Months</a></li>
-          </ul>
-        </div>
+<!-- Earnings Overview Card -->
+<div class="col-md-6">
+  <div class="card h-100">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0 text-ocean-deep">Earnings Overview</h5>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-ocean dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          {{ $earningsPeriodText }}
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="?period=this_week">This Week</a></li>
+          <li><a class="dropdown-item" href="?period=this_month">This Month</a></li>
+          <li><a class="dropdown-item" href="?period=last_3_months">Last 3 Months</a></li>
+        </ul>
       </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6 mb-4 mb-md-0">
-            <div class="p-3 bg-light rounded-3">
-              <div class="d-flex align-items-center">
-                <div class="card-info">
-                  <h4 class="mb-0">₱15,350</h4>
-                  <small class="text-success fw-semibold">
-                    <i class="bx bx-chevron-up"></i> +12.5%
-                  </small>
-                </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6 mb-4 mb-md-0">
+          <div class="p-3 bg-light rounded-3">
+            <div class="d-flex align-items-center">
+              <div class="card-info">
+                <h4 class="mb-0">₱{{ number_format($totalEarnings, 2) }}</h4>
+                @php
+                  $isPositive = $earningsChangePercent >= 0;
+                  $arrow = $isPositive ? 'up' : 'down';
+                  $textClass = $isPositive ? 'text-success' : 'text-danger';
+                @endphp
+                <small class="{{ $textClass }} fw-semibold">
+                  <i class="bx bx-chevron-{{ $arrow }}"></i>
+                  {{ abs(number_format($earningsChangePercent, 1)) }}%
+                </small>
               </div>
-              <h5 class="mt-3 pt-1 mb-1 text-ocean-deep">Total Earnings</h5>
-              <p class="mb-0 text-muted">April 2025</p>
             </div>
+            <h5 class="mt-3 pt-1 mb-1 text-ocean-deep">Total Earnings</h5>
+            <p class="mb-0 text-muted">{{ $earningsPeriodText }}</p>
           </div>
-          <div class="col-md-6">
-            <div id="earningsChart"></div>
-          </div>
+        </div>
+        <div class="col-md-6">
+          <canvas id="earningsChart" height="160"></canvas>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Chart.js Script -->
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('earningsChart').getContext('2d');
+  const earningsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: @json($chartLabels),
+      datasets: [{
+        label: 'Earnings',
+        data: @json($chartValues),
+        borderColor: '#1e88e5',
+        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return '₱' + parseFloat(context.raw).toFixed(2);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₱' + value;
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
+@endpush
+
 
 </div> <!-- end .row -->
 
@@ -1076,10 +1134,10 @@
 <!-- Initialize profile modal script -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the modal with custom styling
+    
     const profileModal = document.getElementById('completeProfileModal');
     if (profileModal) {
-      // Add custom styling to Select2 dropdown when modal opens
+      
       profileModal.addEventListener('shown.bs.modal', function() {
         if (typeof $.fn.select2 !== 'undefined') {
           $('.select2-container--default .select2-selection--multiple').css({
@@ -1100,7 +1158,7 @@
     }
  
     if (typeof $.fn.select2 !== 'undefined') {
-      // Initialize Select2 with custom theme
+      
       $('.select2').select2({
         dropdownParent: $('#completeProfileModal'),
         theme: 'classic',
@@ -1108,13 +1166,13 @@
         templateSelection: formatSelect2Option
       });
       
-      // Format Select2 options to match theme
+      
       function formatSelect2Option(option) {
         if (!option.id) return option.text;
         return $('<span class="select2-option">').text(option.text);
       }
       
-      // Set fish types for existing fisher
+      
       @if(auth()->user()->fisher && auth()->user()->fisher->fish_types)
         try {
           const fishTypes = JSON.parse('{!! auth()->user()->fisher->fish_types !!}');
@@ -1125,16 +1183,16 @@
       @endif
     }
     
-    // Highlight active tab with ocean colors
+    
     $('.nav-tabs .nav-link').on('click', function() {
       $('.nav-tabs .nav-link').removeClass('active-tab');
       $(this).addClass('active-tab');
     });
     
-    // Add custom styling to active tab
+    
     $('.nav-tabs .nav-link.active').addClass('active-tab');
     
-    // Add custom styling to form validation
+    
     const form = document.getElementById('completeProfileForm');
     if (form) {
       form.addEventListener('submit', function() {
